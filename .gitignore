@@ -1,0 +1,29 @@
+# Ignore all files in the node_modules directory
+node_modules/
+
+# Ignore all files in the dist directory
+dist/
+
+# Ignore all files in the build directory
+build/
+
+# Ignore all files in the coverage directory
+coverage/
+
+# Ignore all files in the temp directory
+temp/
+
+# Ignore all files with the .log extension
+*.log
+
+# Ignore all files with the .tmp extension
+*.tmp
+
+# Ignore all files with the .swp extension
+*.swp
+
+# Ignore all files with the .swo extension
+*.swo
+
+# Ignore all files with the .DS_Store extension
+.DS_Store

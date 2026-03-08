@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PPApartment — Renter Management</title>
+    <meta name="description" content="Personal apartment renter management dashboard">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        /* Small overrides for the index app shell */
+        :root{--bg-base:#f6f8fb}
+        .app-layout{min-height:100vh;display:flex}
+        .main-content{flex:1;padding:1.25rem}
+        .nav-item{cursor:pointer;padding:10px 12px;border-radius:6px}
+        .nav-item.active{background:rgba(43,111,184,0.08)}
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <div style="display:flex;align-items:center;justify-content:center;height:60vh;font-size:1.4rem">Loading…</div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts: load auth first, then page modules -->
+    <script src="pages/auth.js"></script>
+    <script src="pages/utils.js"></script>
+    <script src="pages/login/login.js"></script>
+    <script src="pages/home/home.js"></script>
+    <script src="pages/home/dashboard/dashboard.js"></script>
+    <script src="pages/home/billing/billing.js"></script>
+    <script src="pages/home/room/room.js"></script>
+    <script src="pages/home/register/register.js"></script>
+    <script src="pages/home/wifi/wifi.js"></script>
+    <script src="pages/home/advertisement/advertisement.js"></script>
+
+    <script>
+        // Simple SPA Router - loads page modules dynamically
+        async function loadPage(pageName) {
+            console.log('Loading page:', pageName);
+            try {
+                // Clear existing styles
+                const existingStyles = document.querySelectorAll('style[data-page]');
+                existingStyles.forEach(style => style.remove());
+
+                // Load the appropriate page module
+                switch(pageName) {
+                    case 'login':
+                        console.log('Checking renderLoginPage:', typeof renderLoginPage);
+                        if (typeof renderLoginPage === 'function') {
+                            renderLoginPage();
+                        } else {
+                            throw new Error('Login page module not loaded');
+                        }
+                        break;
+                    case 'main':
+                        console.log('Checking renderMainPage:', typeof renderMainPage);
+                        if (typeof renderMainPage === 'function') {
+                            renderMainPage();
+                        } else {
+                            throw new Error('Main page module not loaded');
+                        }
+                        break;
+                    case 'dashboard':
+                        // treat dashboard as alias for main
+                        console.log('Redirecting dashboard to main');
+                        if (typeof renderMainPage === 'function') {
+                            renderMainPage();
+                        } else {
+                            throw new Error('Main page module not loaded');
+                        }
+                        break;
+                    case 'register':
+                        console.log('Checking renderRegisterPage:', typeof renderRegisterPage);
+                        if (typeof renderRegisterPage === 'function') {
+                            if (!document.getElementById('topbarTitle') && typeof renderMainPage==='function') {
+                                renderMainPage();
+                            }
+                            renderRegisterPage();
+                        } else {
+                            throw new Error('Register page module not loaded');
+                        }
+                        break;
+                    case 'room':
+                        console.log('Checking renderRoomPage:', typeof renderRoomPage);
+                        if (typeof renderRoomPage === 'function') {
+                            if (!document.getElementById('topbarTitle') && typeof renderMainPage==='function') {
+                                renderMainPage();
+                            }
+                            renderRoomPage();
+                        } else {
+                            throw new Error('Room page module not loaded');
+                        }
+                        break;
+                    case 'billing':
+                        console.log('Checking renderBillingPage:', typeof renderBillingPage);
+                        if (typeof renderBillingPage === 'function') {
+                            if (!document.getElementById('topbarTitle') && typeof renderMainPage==='function') {
+                                renderMainPage();
+                            }
+                            renderBillingPage();
+                        } else {
+                            throw new Error('Billing page module not loaded');
+                        }
+                        break;
+                    case 'wifi':
+                        console.log('Checking renderWifiPage:', typeof renderWifiPage);
+                        if (typeof renderWifiPage === 'function') {
+                            if (!document.getElementById('topbarTitle') && typeof renderMainPage==='function') {
+                                renderMainPage();
+                            }
+                            renderWifiPage();
+                        } else {
+                            throw new Error('WiFi page module not loaded');
+                        }
+                        break;
+                    case 'advertisement':
+                        console.log('Checking renderAdvertisementPage:', typeof renderAdvertisementPage);
+                        if (typeof renderAdvertisementPage === 'function') {
+                            if (!document.getElementById('topbarTitle') && typeof renderMainPage==='function') {
+                                renderMainPage();
+                            }
+                            renderAdvertisementPage();
+                        } else {
+                            throw new Error('Advertisement page module not loaded');
+                        }
+                        break;
+                    default:
+                        // Default to main
+                        console.log('Defaulting to main, checking renderMainPage:', typeof renderMainPage);
+                        if (typeof renderMainPage === 'function') {
+                            renderMainPage();
+                        } else {
+                            throw new Error('Main page module not loaded');
+                        }
+                }
+            } catch (error) {
+                console.error('Error loading page:', error);
+                const app = document.getElementById('app');
+                if (app) {
+                    app.innerHTML = '<div style="padding:2rem;text-align:center;"><h2>Error loading page</h2><p>Please refresh and try again.</p><p style="color:#666;font-size:0.9rem;">Error: ' + error.message + '</p></div>';
+                }
+            }
+        }
+
+        // Determine which page to load based on URL or default to dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in first
+            if (!isLoggedIn()) {
+                loadPage('login');
+                return;
+            }
+
+            // Get page from URL hash or default to main
+            const hash = window.location.hash.substring(1) || 'main';
+            loadPage(hash);
+        });
+
+        // Handle browser back/forward buttons
+        window.addEventListener('hashchange', () => {
+            const hash = window.location.hash.substring(1) || 'main';
+            loadPage(hash);
+        });
+
+        // Handle sidebar navigation clicks
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('nav-item')) {
+                e.preventDefault();
+                const page = e.target.getAttribute('data-page');
+                if (page) {
+                    // Update active state
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    e.target.classList.add('active');
+
+                    // Navigate to page
+                    window.location.hash = page;
+                    loadPage(page);
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>
